@@ -1,5 +1,7 @@
 # update_rate
 
+[![Build Status](https://travis-ci.org/SilverWingedSeraph/update_rate.svg?branch=master)](https://travis-ci.org/SilverWingedSeraph/update_rate)
+
 A generic, low-overhead rate counter for FPS counters and the like. 
 Usage is simple; pick the number of cycles (frames, updates, etc.) you'd like to average over, 
 construct an `UpdateRateCounter`, and call `update()` on it every cycle.
