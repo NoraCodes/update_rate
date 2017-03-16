@@ -36,6 +36,7 @@ use std::time::{Duration, Instant};
 /// The sample rate (set with `set_sample_rate()` and in the first argument to
 /// `new()`) governs how many `.update()` calls are required before a
 /// meaningful result is produced.
+#[derive(Clone, Copy)]
 pub struct UpdateRateCounter {
     updates_since_clear: u64,
     time_at_last_clear: Instant,
