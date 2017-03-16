@@ -82,7 +82,7 @@ impl UpdateRateCounter {
             // Compose a f64 of the amount of time elapsed since the last
             // update; that's seconds plus nanos
             let real_time_since_clear = elapsed.as_secs() as f64 +
-                                        elapsed.subsec_nanos() as f64 * (1.0 / 1000000000.0);
+                                        elapsed.subsec_nanos() as f64 * 1.0e-9;
             // The rate is the number of updates, over the amount of time it's
             // taken to do them
             self.rate = self.updates_since_clear as f64 / real_time_since_clear;
@@ -119,15 +119,23 @@ mod tests {
         let mut c = UpdateRateCounter::new(10);
         assert!(c.rate() == 0.0,
                 "Counter should have no data before it gets enough samples.");
+
+        let sample_period = Duration::from_millis(10);
         for i in 1..11 {
-            // Rate should be 100 Hz with 10 ms/update
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            // Use busy-wait because sleeping is extremely inaccurate
+            let start = Instant::now();
+            while start.elapsed() < sample_period {}
+
             c.update();
-            assert!(c.rate_age_cycles() == i % 10, // Mod 10 because rate_age_cycles will go back to 0 at sample_rate which is 10
-                    "Rate age not in sync with cycle loop! {} loops but ras = {} ",
+
+            // Mod 10 because rate_age_cycles will go back to 0 at sample_rate which is 10
+            assert!(c.rate_age_cycles() == i % 10,
+                    "Rate age not in sync with cycle loop! {} loops but ras = {}",
                     i,
                     c.rate_age_cycles());
         }
+
+        // Rate should be 100 Hz with 10 ms/update
         let difference = 100.0 - c.rate();
         println!("Rate was {}", c.rate());
         assert!(difference < 10.0,
