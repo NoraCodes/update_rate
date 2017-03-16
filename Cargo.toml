@@ -1,6 +1,6 @@
 [package]
 name = "update_rate"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["SilverWingedSeraph <lfstindall@gmail.com>"]
 description = "A generic, low-overhead rate counter for FPS counters and the like."
 repository = "https://github.com/SilverWingedSeraph/update_rate"
@@ -11,6 +11,6 @@ license = "MIT"
 readme = "README.md"
 
 [badges]
-travis-ci = { repository = "https://github.com/SilverWingedSeraph/update_rate", branch = "master" }
+travis-ci = { repository = "SilverWingedSeraph/update_rate", branch = "master" }
 
 [dependencies]

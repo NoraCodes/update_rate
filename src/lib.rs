@@ -69,8 +69,8 @@ impl UpdateRateCounter {
             self.rate = self.updates_since_clear as f64 / real_time_since_clear;
 
             // Reset the structure
-            self.updates_since_clear = 0;
             self.time_at_last_clear = Instant::now();
+            self.updates_since_clear = 0;
         }
     }
 
