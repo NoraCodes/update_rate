@@ -1,8 +1,11 @@
 //! This crate provides a utility for counting updates, for instance frame rates.
 //!
-//! The struct [`UpdateRateCounter`](./struct.UpdateRateCounter.html) has a
+//! Implementors of the `RateCounter` trait have a
 //! method, `.update()`, which is meant to be called every time your system
 //! updates (e.g. every frame, every physics update, etc).
+//!
+//! The trait `RateCounterImmut` adds an immutable update method which consumes
+//! the rate counter and returns an updated one.
 //!
 //! This can also be done immutably using shadowing and `.update_immut()`.
 //!
@@ -11,10 +14,9 @@
 //! (or `update_immut()`) at the beginning of your cycles.
 //!
 //! ```
-//! use update_rate::UpdateRateCounter;
-//!
-//! // Create a new UpdateRateCounter with a sample rate of 10 updates
-//! let mut c = UpdateRateCounter::new(10);
+//! use update_rate::{RateCounter, DiscreteRateCounter};
+//! // Create a new DiscreteRateCounter with a sample rate of 10 updates
+//! let mut c = DiscreteRateCounter::new(10);
 //!
 //! for _ in 1..11 {
 //!     c.update();
@@ -26,172 +28,36 @@
 //! println!("Rate was {}", c.rate());
 //! assert!(difference < 10.0, "Counter rate should be closer to actual rate.");
 //! ```
-use std::time::{Duration, Instant};
+mod base;
+pub use base::DiscreteRateCounter;
 
-/// A generic non-rolling update counter, suitable for rapidly-changing rate
-/// counting, such as FPS counters in games.
-///
-/// # Usage
-///
-/// Call `.update()` every time your system starts a new update/cycle; for
-/// instance, an FPS counter would call this at the beginning of every frame.
-/// The sample rate (set with `set_sample_rate()` and in the first argument to
-/// `new()`) governs how many `.update()` calls are required before a
-/// meaningful result is produced.
-#[derive(Clone, Copy)]
-pub struct UpdateRateCounter {
-    updates_since_clear: u64,
-    time_at_last_clear: Instant,
-    rate: f64,
-    sample_rate: u64,
-}
+//mod rolling;
+//pub use rolling::RollingRateCounter;
 
-impl UpdateRateCounter {
-    /// Create a new UpdateRateCounter which calculates the update rate every
-    /// `sample_rate` cycles.  Until that many cycles occur, `rate()` will
-    /// return a useless value, typically 0.0.
-    ///
-    /// If this isn't acceptable, one strategy is to start the sample rate at 0
-    /// and keep ramping it up until it reaches your target sample rate;
-    /// however, the data near the beginning will be utter trash.
-    pub fn new(sample_rate: u64) -> Self {
-        UpdateRateCounter {
-            updates_since_clear: 0,
-            time_at_last_clear: Instant::now(),
-            rate: 0.0,
-            sample_rate: sample_rate,
-        }
-    }
-
+pub trait RateCounter {
     /// Return the current rate at which the UpdateRateCounter is measuring, in
     /// updates.
-    pub fn sample_rate(&self) -> u64 {
-        self.sample_rate
-    }
+    fn sample_rate(&self) -> u64;
 
     /// Set the number of updates which the UpdateRateCounter waits before
     /// updating its status.
-    pub fn set_sample_rate(&mut self, sample_rate: u64) {
-        self.sample_rate = sample_rate
-    }
+    fn set_sample_rate(&mut self, sample_rate: u64);
 
     /// Updates the struct in place, but requires a mutable binding.
     /// Call this at the beginning of each cycle of the periodic activity being
     /// measured.
-    pub fn update(&mut self) {
-        self.updates_since_clear += 1;
+    fn update(&mut self);
 
-        if self.updates_since_clear >= self.sample_rate {
-            let elapsed = self.time_at_last_clear.elapsed();
-            // Compose a f64 of the amount of time elapsed since the last
-            // update; that's seconds plus nanos
-            let real_time_since_clear = elapsed.as_secs() as f64 +
-                                        elapsed.subsec_nanos() as f64 * 1.0e-9;
-            // The rate is the number of updates, over the amount of time it's
-            // taken to do them
-            self.rate = self.updates_since_clear as f64 / real_time_since_clear;
+    /// Return the last calculated rate of operation, in Hertz (updates per
+    /// second).
+    fn rate(&self) -> f64;
+}
 
-            // Reset the structure
-            self.time_at_last_clear = Instant::now();
-            self.updates_since_clear = 0;
-        }
-    }
-
+pub trait RateCounterImmut: RateCounter {    
     /// Consumes the struct and returns an updated version.
     /// Call this at the beginning of each cycle of the periodic activity being
     /// measured.
     /// Especially useful in applications like FPS counters, where shadowing can
     /// be used to avoid a mutable binding.
-    /// # Examples
-    ///
-    /// ```
-    /// use update_rate::UpdateRateCounter;
-    /// let c = UpdateRateCounter::new(5);
-    /// for i in 1..101 {
-    ///     let c = c.update_immut();
-    ///     if i % 10 == 0 {println!("Rate: {}", c.rate())}
-    ///     // Do work here
-    /// }
-    /// ```
-    pub fn update_immut(self) -> Self {
-        let mut new = self.clone();
-        new.update();
-        new
-    }
-
-    /// Return the last calculated rate of operation, in Hertz (updates per
-    /// second).
-    pub fn rate(&self) -> f64 {
-        self.rate
-    }
-
-    /// Return the number of cycles since the rate was last recalculated.
-    pub fn rate_age_cycles(&self) -> u64 {
-        self.updates_since_clear
-    }
-
-    /// Return the amount of time since the rate was last recalculated. This
-    /// requires examining the system clock and is thus relatively expensive.
-    pub fn rate_age_duration(&self) -> Duration {
-        self.time_at_last_clear.elapsed()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_update_rate_counter() {
-        let mut c = UpdateRateCounter::new(10);
-        assert!(c.rate() == 0.0,
-                "Counter should have no data before it gets enough samples.");
-
-        let sample_period = Duration::from_millis(10);
-        for i in 1..11 {
-            // Use busy-wait because sleeping is extremely inaccurate
-            let start = Instant::now();
-            while start.elapsed() < sample_period {}
-
-            c.update();
-
-            // Mod 10 because rate_age_cycles will go back to 0 at sample_rate which is 10
-            assert!(c.rate_age_cycles() == i % 10,
-                    "Rate age not in sync with cycle loop! {} loops but ras = {}",
-                    i,
-                    c.rate_age_cycles());
-        }
-
-        // Rate should be 100 Hz with 10 ms/update
-        let difference = 100.0 - c.rate();
-        println!("Rate was {}", c.rate());
-        assert!(difference < 10.0,
-                "Counter rate should be closer to actual rate.");
-    }
-    #[test]
-    fn test_update_rate_counter_immut() {
-        let mut c = UpdateRateCounter::new(10);
-        assert!(c.rate() == 0.0,
-                "Counter should have no data before it gets enough samples.");
-
-        let sample_period = Duration::from_millis(10);
-        for i in 1..11 {
-            // Use busy-wait because sleeping is extremely inaccurate
-            let start = Instant::now();
-            while start.elapsed() < sample_period {}
-
-            c = c.update_immut();
-
-            // Mod 10 because rate_age_cycles will go back to 0 at sample_rate which is 10
-            assert!(c.rate_age_cycles() == i % 10,
-                    "Rate age not in sync with cycle loop! {} loops but ras = {}",
-                    i,
-                    c.rate_age_cycles());
-        }
-
-        // Rate should be 100 Hz with 10 ms/update
-        let difference = 100.0 - c.rate();
-        println!("Rate was {}", c.rate());
-        assert!(difference < 10.0,
-                "Counter rate should be closer to actual rate.");
-    }
+    fn update_immut(self) -> Self;
 }
