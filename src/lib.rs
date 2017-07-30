@@ -31,21 +31,22 @@
 mod base;
 pub use base::DiscreteRateCounter;
 
-//mod rolling;
-//pub use rolling::RollingRateCounter;
+mod rolling;
+pub use rolling::RollingRateCounter;
 
 pub trait RateCounter {
-    /// Return the current rate at which the UpdateRateCounter is measuring, in
-    /// updates.
-    fn sample_rate(&self) -> u64;
+    /// Return the current number of samples the UpdateRateCounter is measuring.
+    fn samples(&self) -> u64;
 
-    /// Set the number of updates which the UpdateRateCounter waits before
-    /// updating its status.
-    fn set_sample_rate(&mut self, sample_rate: u64);
+    /// Set the number of updates which the UpdateRateCounter considers.
+    ///
+    /// # Panics
+    /// This function may panic if given a `samples` value equal to 0.
+    fn set_samples(&mut self, samples: u64);
 
     /// Updates the struct in place, but requires a mutable binding.
-    /// Call this at the beginning of each cycle of the periodic activity being
-    /// measured.
+    /// Call either this OR `update_immut()` at the beginning of each
+    /// cycle of the periodic activity being measured.
     fn update(&mut self);
 
     /// Return the last calculated rate of operation, in Hertz (updates per
@@ -53,11 +54,9 @@ pub trait RateCounter {
     fn rate(&self) -> f64;
 }
 
-pub trait RateCounterImmut: RateCounter {    
+pub trait RateCounterImmut: RateCounter {
     /// Consumes the struct and returns an updated version.
-    /// Call this at the beginning of each cycle of the periodic activity being
-    /// measured.
-    /// Especially useful in applications like FPS counters, where shadowing can
-    /// be used to avoid a mutable binding.
+    /// Call either this OR `update()` at the beginning of
+    /// each cycle of the periodic activity being measured.
     fn update_immut(self) -> Self;
 }
