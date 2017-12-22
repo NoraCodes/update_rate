@@ -34,6 +34,12 @@ pub use base::DiscreteRateCounter;
 mod rolling;
 pub use rolling::RollingRateCounter;
 
+mod format;
+pub use format::*;
+
+/// Basic rate counter functionality.
+/// 
+/// Types which implement RateCounter also implement Display (a string with "<cycles> Hz") and Debug (including samples as well).
 pub trait RateCounter {
     /// Return the current number of samples the UpdateRateCounter is measuring.
     fn samples(&self) -> u64;
@@ -54,6 +60,7 @@ pub trait RateCounter {
     fn rate(&self) -> f64;
 }
 
+/// Immutable extensions for rate counters.
 pub trait RateCounterImmut: RateCounter {
     /// Consumes the struct and returns an updated version.
     /// Call either this OR `update()` at the beginning of
