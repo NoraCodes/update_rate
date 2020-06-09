@@ -38,7 +38,7 @@ mod format;
 pub use format::*;
 
 /// Basic rate counter functionality.
-/// 
+///
 /// Types which implement RateCounter also implement Display (a string with "<cycles> Hz") and Debug (including samples as well).
 pub trait RateCounter {
     /// Return the current number of samples the UpdateRateCounter is measuring.

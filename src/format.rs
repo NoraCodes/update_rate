@@ -1,9 +1,9 @@
 //! Provides implementations of format traits
 
-use std::fmt;
-use crate::RateCounter;
 use crate::rolling::RollingRateCounter;
 use crate::DiscreteRateCounter;
+use crate::RateCounter;
+use std::fmt;
 
 /// Creates an implementation of fmt::Display and fmt::Debug for the given type implementing RateCounter
 macro_rules! format_impl_for_RateCounter {
@@ -28,9 +28,9 @@ format_impl_for_RateCounter!(DiscreteRateCounter);
 
 #[cfg(test)]
 mod tests {
-    use {RateCounter, RollingRateCounter, DiscreteRateCounter};
-    use std::time::Duration;
+    use super::{DiscreteRateCounter, RateCounter, RollingRateCounter};
     use std::thread::sleep;
+    use std::time::Duration;
     #[test]
     fn test_rolling_rate_counter_formatting() {
         let mut c = RollingRateCounter::new(10);
@@ -46,9 +46,17 @@ mod tests {
         let rate = c.rate();
         let samples = c.samples();
         let expected = format!("{} Hz", rate);
-        assert_eq!(expected, format!("{}", c), "Display output should be of the form \"<rate> Hz\"");
+        assert_eq!(
+            expected,
+            format!("{}", c),
+            "Display output should be of the form \"<rate> Hz\""
+        );
         let expected = format!("{{ samples: {}, rate: {} }}", samples, rate);
-        assert_eq!(expected, format!("{:?}", c), "Debug output should be of the form \"{{ samples: <samp>, rate: <rate> }}\"");
+        assert_eq!(
+            expected,
+            format!("{:?}", c),
+            "Debug output should be of the form \"{{ samples: <samp>, rate: <rate> }}\""
+        );
     }
 
     #[test]
@@ -66,8 +74,16 @@ mod tests {
         let rate = c.rate();
         let samples = c.samples();
         let expected = format!("{} Hz", rate);
-        assert_eq!(expected, format!("{}", c), "Display output should be of the form \"<rate> Hz\"");
+        assert_eq!(
+            expected,
+            format!("{}", c),
+            "Display output should be of the form \"<rate> Hz\""
+        );
         let expected = format!("{{ samples: {}, rate: {} }}", samples, rate);
-        assert_eq!(expected, format!("{:?}", c), "Debug output should be of the form \"{{ samples: <samp>, rate: <rate> }}\"");
+        assert_eq!(
+            expected,
+            format!("{:?}", c),
+            "Debug output should be of the form \"{{ samples: <samp>, rate: <rate> }}\""
+        );
     }
 }

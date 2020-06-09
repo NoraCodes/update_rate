@@ -1,6 +1,6 @@
-use std::time::Instant;
-use std::collections::VecDeque;
 use super::RateCounter;
+use std::collections::VecDeque;
+use std::time::Instant;
 
 /// A rolling update counter. It records as many updates as the given sample rate
 /// and re-calculates the average update time on each call to update.

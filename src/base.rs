@@ -1,5 +1,5 @@
-use std::time::{Duration, Instant};
 use super::{RateCounter, RateCounterImmut};
+use std::time::{Duration, Instant};
 
 /// A very basic non-rolling update counter. It counts n updates, calculates, and
 /// then resets (where n is the sample rate), which means that it takes at least
