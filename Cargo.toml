@@ -1,9 +1,10 @@
 [package]
 name = "update_rate"
-version = "2.0.0"
-authors = ["SilverWingedSeraph <lfstindall@gmail.com>"]
+version = "2.0.1"
+authors = ["Leonora Tindall <nora@nora.codes>"]
 description = "A generic, low-overhead rate counter for FPS counters and the like."
-repository = "https://github.com/SilverWingedSeraph/update_rate"
+edition = "2018"
+repository = "https://github.com/NoraCodes/update_rate"
 documentation = "https://docs.rs/update_rate"
 keywords = ["time", "rate", "game", "sensor", "instrumentation"]
 categories = ["date-and-time", "development-tools::profiling", "games", "game-engines"]

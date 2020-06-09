@@ -1,9 +1,9 @@
 //! Provides implementations of format traits
 
-use ::std::fmt;
-use RateCounter;
-use rolling::RollingRateCounter;
-use DiscreteRateCounter;
+use std::fmt;
+use crate::RateCounter;
+use crate::rolling::RollingRateCounter;
+use crate::DiscreteRateCounter;
 
 /// Creates an implementation of fmt::Display and fmt::Debug for the given type implementing RateCounter
 macro_rules! format_impl_for_RateCounter {
